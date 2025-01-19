@@ -1,0 +1,67 @@
+    @startuml new_class
+
+' Force vertical layout
+left to right direction
+skinparam packageStyle node
+skinparam Padding 1
+skinparam ParticipantPadding 0
+skinparam ComponentPadding 0
+skinparam nodesep 3
+skinparam ranksep 3
+skinparam class {
+    BackgroundColor LightGreen
+    BorderColor Black
+    ArrowColor Black
+}
+
+' Core Game Classes
+package "game" #LightYellow {
+    abstract class BaseGameManager
+    class DiceManager
+    class StatisticsManager
+    
+    class PigGameManager extends BaseGameManager
+    class GreedGameManager extends BaseGameManager
+    class BalutGameManager extends BaseGameManager
+}
+
+' Models
+package "models" #LightGray {
+    class GameState
+    class GameStatistics
+    class Detection
+    class DetectionResponse
+    class Prediction
+    enum GameBoard
+    enum Achievement
+    enum PlayStyle
+}
+
+' Repository and Service
+package "data" #LightBlue {
+    interface RoboflowRepository
+    class RoboflowRepositoryImpl implements RoboflowRepository
+    interface RoboflowService
+}
+
+' ViewModels
+package "viewmodel" #LightCyan {
+    class GameViewModel
+    class DetectionViewModel
+    class DetectionState
+}
+
+' Hidden links for layout
+GameState -[hidden]-> GameBoard
+BaseGameManager -[hidden]-> GameViewModel
+Detection -[hidden]-> DetectionResponse
+RoboflowRepository -[hidden]-> RoboflowService
+
+' Real relationships
+GameViewModel --> BaseGameManager
+GameViewModel --> DiceManager
+GameViewModel --> StatisticsManager
+DetectionViewModel --> RoboflowRepository
+RoboflowRepositoryImpl --> RoboflowService
+
+@enduml

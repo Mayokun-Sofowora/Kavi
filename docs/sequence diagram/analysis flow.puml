@@ -1,0 +1,50 @@
+@startuml analysis_flow
+'sequence/analysis_flow.puml
+
+skinparam sequenceMessageAlign center
+
+actor Player
+participant "StatisticsScreen" as StatsUI
+participant "StatisticsViewModel" as StatsVM
+participant "StatisticsManager" as Stats
+participant "PlayerAnalysis" as Analysis
+
+Player -> StatsUI: View Statistics
+activate StatsUI
+
+StatsUI -> StatsVM: Request Statistics
+activate StatsVM
+
+StatsVM -> Stats: getGameStatistics()
+activate Stats
+
+Stats -> Analysis: analyzePlayerData()
+activate Analysis
+
+Analysis -> Analysis: calculateWinRate()
+Analysis -> Analysis: assessPlayStyle()
+Analysis -> Analysis: measureImprovement()
+Analysis -> Analysis: analyzeDecisionPatterns()
+
+Analysis --> Stats: PlayerAnalysis
+deactivate Analysis
+
+Stats --> StatsVM: GameStatistics
+deactivate Stats
+
+StatsVM --> StatsUI: Update UI
+deactivate StatsVM
+
+StatsUI -> StatsUI: Display Statistics
+StatsUI -> StatsUI: Show Win Rate
+StatsUI -> StatsUI: Show Games Played
+StatsUI -> StatsUI: Show Play Style
+StatsUI -> StatsUI: Show Improvement Metrics
+
+Player -> StatsUI: View Detailed Analysis
+StatsUI -> StatsUI: Show Decision Patterns
+StatsUI -> StatsUI: Show Performance Trends
+
+deactivate StatsUI
+
+@enduml

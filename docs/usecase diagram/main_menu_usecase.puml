@@ -1,0 +1,39 @@
+@startuml main_menu_usecase
+'usecase/main_menu_usecase.puml
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam UseCaseBackgroundColor #E8F8F5
+
+actor "Player" as player
+
+rectangle "Main Menu" {
+    usecase "Start" as UC1
+    usecase "Show Settings" as UC2
+    usecase "Show Instructions" as UC3
+    usecase "Show Statistics" as UC4
+    usecase "Show Leaderboard" as UC5
+    usecase "Logout" as UC6
+    usecase "View Instructions" as UC7
+    usecase "Select Game Mode" as UC8
+    usecase "View Player Analysis" as UC9
+    usecase "Sign In" as UC10
+}
+
+' Player primary interactions
+player -- UC1
+player -- UC2
+player -- UC3
+player -- UC4
+player -- UC5
+player -- UC6
+
+' Include relationships
+UC1 ..> UC8 : <<include>>
+UC6 ..> UC10 : <<include>>
+
+' Extend relationships
+UC7 .> UC8 : <<extend>>
+UC9 .> UC4 : <<extend>>
+
+@enduml

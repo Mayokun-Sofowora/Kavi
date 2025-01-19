@@ -1,0 +1,17 @@
+@startuml dice_detection_workflow
+
+skinparam packageStyle rectangle
+skinparam UseCaseBackgroundColor #E8F8F5
+
+actor Player
+participant "Camera" as Camera
+participant "DetectionViewModel" as DVM
+participant "GameViewModel" as GVM
+
+Player -> Camera: Capture Image
+Camera -> DVM: Send Image
+DVM -> DVM: Process Image
+DVM -> GVM: Update Game State
+GVM -> Player: Display Detected Values
+
+@enduml

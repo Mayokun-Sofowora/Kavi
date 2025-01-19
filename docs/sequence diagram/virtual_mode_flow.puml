@@ -1,0 +1,67 @@
+@startuml virtual_mode_flow
+
+skinparam packageStyle rectangle
+skinparam UseCaseBackgroundColor #E8F8F5
+
+actor Player
+participant "VirtualModeScreen" as VMS
+participant "DetectionViewModel" as DVM
+participant "RoboflowRepository" as RR
+participant "RoboflowService" as RS
+participant "GameViewModel" as GVM
+participant "ScoreCalculator" as SC
+participant "StatisticsManager" as SM
+
+Player -> VMS: Opens virtual mode
+activate VMS
+
+VMS -> VMS: Initialize camera preview
+VMS -> Player: Show camera preview
+
+Player -> VMS: Capture image
+activate DVM
+
+VMS -> DVM: detectDice(bitmap)
+DVM -> RR: detectDice(bitmap)
+activate RR
+
+RR -> RR: Preprocess image (resize to 640x640)
+RR -> RS: detectDice(apiKey, image)
+activate RS
+
+RS -> RS: Process image
+RS --> RR: Return predictions
+deactivate RS
+
+RR -> RR: Map predictions to detections
+RR -> RR: Filter low confidence detections
+RR --> DVM: Return detections
+deactivate RR
+
+DVM -> DVM: Update detection state
+DVM --> VMS: Emit Success state
+deactivate DVM
+
+VMS -> VMS: Draw detection boxes
+VMS -> Player: Show detection results
+
+alt Player accepts detections
+    Player -> VMS: Click Save
+    VMS -> GVM: updateDiceFromDetection(values)
+    activate GVM
+    GVM -> SC: Calculate scores
+    SC --> GVM: Return score
+    GVM -> SM: Track game progress
+    GVM -> GVM: Update game state
+    GVM --> VMS: Emit updated state
+    deactivate GVM
+    VMS -> Player: Return to game
+else Player retakes
+    Player -> VMS: Click Retake
+    VMS -> VMS: Reset camera
+    VMS -> Player: Show camera preview
+end
+
+deactivate VMS
+
+@enduml 

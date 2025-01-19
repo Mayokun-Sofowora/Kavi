@@ -1,0 +1,54 @@
+@startuml game_flow
+'sequence/game_flow.puml
+
+skinparam sequenceMessageAlign center
+
+actor Player
+participant "Main Menu" as Menu
+participant "Board Selection" as Board
+participant "Game Screen" as Game
+participant "GameViewModel" as GameVM
+participant "StatisticsManager" as Stats
+participant "LeaderboardRepository" as Leaderboard
+
+Player -> Menu: Start Game
+activate Menu
+Menu -> Board: Select Board
+deactivate Menu
+
+Player -> Board: Choose Board
+activate Board
+Board -> Game: Start Game
+deactivate Board
+
+activate Game
+Game -> GameVM: Initialize Game
+
+loop Game Round
+    Player -> Game: Roll Dice
+    Game -> GameVM: Process Roll
+    GameVM --> Game: Update Score
+
+    alt Continue Rolling
+        Player -> Game: Roll Again
+    else Bank Points
+        Player -> Game: Bank Points
+        Game -> GameVM: Save Points
+        GameVM --> Game: Update Total Score
+    end
+end
+
+alt Win Condition Met
+    GameVM -> Game: Game Over
+    Game -> Stats: Update Statistics
+    Stats -> Stats: Update Player Analysis
+    Stats -> Leaderboard: Update Leaderboard
+    Game --> Player: Show Results
+else Player Quits
+    Player -> Game: Exit Game
+    Game -> Stats: Save Current Progress
+end
+
+deactivate Game
+
+@enduml

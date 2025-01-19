@@ -1,0 +1,176 @@
+@startuml class
+
+' Force vertical layout
+left to right direction
+skinparam packageStyle node
+skinparam Padding 1
+skinparam ParticipantPadding 0
+skinparam ComponentPadding 0
+skinparam nodesep 3
+skinparam ranksep 3
+skinparam class {
+    BackgroundColor LightGreen
+    BorderColor Black
+    ArrowColor Black
+}
+
+' Core Models
+package "data.models" #LightGray {
+    class GameScoreState {
+        +playerScores: Map<Int, Any>
+        +currentPlayerIndex: Int
+        +isGameOver: Boolean
+        +currentTurnScore: Int
+        +rollsLeft: Int
+        +heldDice: Set<Int>
+    }
+    
+    class GameStatistics {
+        +gamesPlayed: Int
+        +highScores: Map<String, Int>
+        +winRates: Map<String, WinRate>
+        +playerAnalysis: PlayerAnalysis
+        +lastSeen: Long
+    }
+    
+    class PlayerAnalysis {
+        +predictedWinRate: Float
+        +consistency: Float
+        +playStyle: PlayStyle
+        +improvement: Float
+        +timeMetrics: TimeMetrics
+        +performanceMetrics: PerformanceMetrics
+        +achievementProgress: Map<String, Float>
+    }
+    
+    package "detection" {
+        class Detection {
+            +label: String
+            +confidence: Float
+            +boundingBox: RectF
+        }
+        class DetectionResponse
+        class Prediction
+    }
+    
+    package "enums" {
+        enum Achievement
+        enum GameBoard
+        enum PlayStyle
+    }
+}
+
+' Game Management
+package "data.manager" #LightYellow {
+    class DiceManager {
+        +diceImages: StateFlow<List<Int>>
+        +isRolling: StateFlow<Boolean>
+        +heldDice: StateFlow<Set<Int>>
+        +currentRolls: StateFlow<List<Int>>
+        +rollDice()
+        +toggleHold()
+        +resetGame()
+    }
+    
+    class StatisticsManager {
+        +playerAnalysis: StateFlow<PlayerAnalysis?>
+        +gameStatistics: StateFlow<GameStatistics?>
+        +modelTrainingStatus: StateFlow<String?>
+        +updateGameStatistics()
+        +clearAllData()
+        +startGameTiming()
+    }
+    
+    package "games" {
+        class PigGameManager {
+            +initializeGame()
+            +handleTurn()
+            +bankScore()
+            +shouldAIBank()
+        }
+        class GreedGameManager {
+            +initializeGame()
+            +handleTurn()
+            +bankScore()
+            +shouldAIBank()
+        }
+        class BalutGameManager {
+            +initializeGame()
+            +handleTurn()
+            +scoreCategory()
+            +chooseAICategory()
+        }
+    }
+}
+
+' Services
+package "data.service" #LightBlue {
+    interface GameTracker {
+        +trackDecision()
+        +trackRoll()
+        +trackBanking()
+    }
+    interface RoboflowService {
+        +detectDice(): Response<DetectionResponse>
+    }
+}
+
+' Repository
+package "data.repository" #LightBlue {
+    interface RoboflowRepository {
+        +detectDice(bitmap: Bitmap): List<Detection>
+    }
+    class RoboflowRepositoryImpl implements RoboflowRepository
+}
+
+' ViewModels
+package "ui.viewmodel" #LightCyan {
+    class GameViewModel {
+        +gameState: StateFlow<GameScoreState>
+        +diceImages: StateFlow<List<Int>>
+        +isRolling: StateFlow<Boolean>
+        +selectedBoard: StateFlow<String>
+        +rollDice()
+        +toggleDiceHold()
+        +bankScore()
+        +updateDiceFromDetection()
+    }
+    class DetectionViewModel {
+        +detectionState: StateFlow<DetectionState>
+        +detectDice()
+        +clearDetections()
+    }
+    class AppViewModel {
+        +modelRetrainingStatus: StateFlow<String?>
+    }
+}
+
+' Utilities
+package "util" #LightYellow {
+    class ScoreCalculator {
+        +{static} calculateGreedScore()
+        +{static} calculateBalutScore()
+        +{static} calculateCategoryScore()
+    }
+}
+
+' Real relationships
+GameViewModel --> DiceManager
+GameViewModel --> StatisticsManager
+GameViewModel --> PigGameManager
+GameViewModel --> GreedGameManager
+GameViewModel --> BalutGameManager
+DetectionViewModel --> RoboflowRepository
+RoboflowRepositoryImpl --> RoboflowService
+PigGameManager --> StatisticsManager
+GreedGameManager --> StatisticsManager
+BalutGameManager --> StatisticsManager
+PigGameManager --> GameTracker
+GreedGameManager --> GameTracker
+BalutGameManager --> GameTracker
+GameViewModel ..> ScoreCalculator
+PigGameManager ..> ScoreCalculator
+GreedGameManager ..> ScoreCalculator
+BalutGameManager ..> ScoreCalculator
+
+@enduml

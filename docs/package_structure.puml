@@ -1,0 +1,101 @@
+@startuml package_structure
+top to bottom direction
+skinparam packageStyle node
+skinparam linetype ortho
+
+package "com.mayor.kavi" {
+    package "data" #LightCyan {
+        package "models" {
+            package "enums" {
+                [Achievement]
+                [GameBoard]
+                [PlayStyle]
+            }
+            package "detection" {
+                [Detection]
+                [DetectionResponse]
+                [Prediction]
+            }
+            package "game" {
+                [GameScoreState]
+                [GameStatistics]
+                [PlayerAnalysis]
+            }
+        }
+        
+        package "repository" {
+            [RoboflowRepository]
+            [RoboflowRepositoryImpl]
+        }
+        
+        package "service" {
+            [RoboflowService]
+            [GameTracker]
+            [GameTrackerImpl]
+        }
+        
+        package "manager" {
+            [StatisticsManager]
+            [DiceManager]
+            [ShakeDetectionManager]
+            [DataStoreManager]
+            package "games" {
+                [PigGameManager]
+                [GreedGameManager]
+                [BalutGameManager]
+                [MyGameManager]
+            }
+        }
+    }
+    
+    package "ui" #LightGrey {
+        package "screens" {
+            package "main" {
+                [MainMenu]
+                [StatisticsScreen]
+                [SettingsScreen]
+            }
+            package "modes" {
+                [VirtualModeScreen]
+            }
+            package "gameboards" {
+                [BoardOneScreen]
+                [BoardTwoScreen]
+                [BoardThreeScreen]
+            }
+        }
+        
+        package "components" {
+            [CameraPreview]
+            [DrawDetectionBox]
+            [DiceRollAnimation]
+            [AnalyticsDashboard]
+        }
+        
+        package "viewmodel" {
+            [GameViewModel]
+            [DetectionViewModel]
+            [AppViewModel]
+        }
+    }
+    
+    package "di" #Pink {
+        [AppModule]
+        [GameModule]
+    }
+    
+    package "util" #LightYellow {
+        [ScoreCalculator]
+        [NavigationGraph]
+        [Screen]
+        [GameMessages]
+    }
+}
+
+' Dependencies
+data ...> util : uses
+ui ...> data : uses
+ui ...> di : uses
+data ...> di : uses
+
+@enduml
