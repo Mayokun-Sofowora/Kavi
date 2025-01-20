@@ -28,7 +28,7 @@ class RoboflowRepositoryImpl @Inject constructor(
 
     companion object {
         /** API key for authenticating with the Roboflow service */
-        private const val API_KEY = "zE2nvgkdH4HiZvTv1S84"
+        private const val API_KEY = BuildConfig.ROBOFLOW_API_KEY
 
         /** Minimum confidence threshold for accepting a detection (70%) */
         private const val CONFIDENCE_THRESHOLD = 0.4f
