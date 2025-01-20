@@ -30,7 +30,7 @@ class RoboflowRepositoryImpl @Inject constructor(
         /** API key for authenticating with the Roboflow service */
         private const val API_KEY = BuildConfig.ROBOFLOW_API_KEY
 
-        /** Minimum confidence threshold for accepting a detection (70%) */
+        /** Minimum confidence threshold for accepting a detection (40%) */
         private const val CONFIDENCE_THRESHOLD = 0.4f
 
         /** Target size for image preprocessing (required by the Roboflow model) */
