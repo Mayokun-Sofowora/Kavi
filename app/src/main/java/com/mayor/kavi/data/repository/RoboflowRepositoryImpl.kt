@@ -1,6 +1,7 @@
 package com.mayor.kavi.data.repository
 
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.RectF
 import com.mayor.kavi.data.models.detection.Detection
 import com.mayor.kavi.data.service.RoboflowService
@@ -12,6 +13,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import java.io.ByteArrayOutputStream
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.MultipartBody
+import kotlin.math.max
 
 /**
  * Implementation of [RoboflowRepository] that handles dice detection using the Roboflow API.
@@ -120,13 +122,115 @@ class RoboflowRepositoryImpl @Inject constructor(
      */
     private suspend fun preprocessImage(bitmap: Bitmap): Bitmap {
         return withContext(Dispatchers.Default) {
-            val scaledBitmap = Bitmap.createScaledBitmap(
-                bitmap,
-                TARGET_SIZE,
-                TARGET_SIZE,
-                true
-            )
-            scaledBitmap
+            try {
+                // Step 1: Convert to RGB if needed
+                val rgbBitmap = ensureRGBFormat(bitmap)
+
+                // Step 2: Enhance contrast and normalize lighting
+                val enhancedBitmap = enhanceContrast(rgbBitmap)
+
+                // Step 3: Scale while maintaining aspect ratio
+                val scaledBitmap = scaleWithAspectRatio(enhancedBitmap, TARGET_SIZE)
+
+                // Step 4: Apply noise reduction
+                val finalBitmap = reduceNoise(scaledBitmap)
+
+                Timber.d("Preprocessing completed successfully")
+                finalBitmap
+            } catch (e: Exception) {
+                Timber.e(e, "Error during image preprocessing")
+                // Fallback to basic scaling if enhancement fails
+                Bitmap.createScaledBitmap(bitmap, TARGET_SIZE, TARGET_SIZE, true)
+            }
         }
+    }
+
+    private fun ensureRGBFormat(bitmap: Bitmap): Bitmap {
+        return if (bitmap.config != Bitmap.Config.ARGB_8888) {
+            bitmap.copy(Bitmap.Config.ARGB_8888, true)
+        } else bitmap
+    }
+
+    private fun enhanceContrast(bitmap: Bitmap): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+        val pixels = IntArray(width * height)
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+
+        // Calculate histogram
+        val histogram = IntArray(256)
+        for (pixel in pixels) {
+            val gray = (Color.red(pixel) + Color.green(pixel) + Color.blue(pixel)) / 3
+            histogram[gray]++
+        }
+
+        // Find min and max gray values
+        var min = 0
+        var max = 255
+        for (i in histogram.indices) {
+            if (histogram[i] > 0) {
+                min = i
+                break
+            }
+        }
+        for (i in histogram.indices.reversed()) {
+            if (histogram[i] > 0) {
+                max = i
+                break
+            }
+        }
+
+        // Apply contrast stretching
+        val output = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        for (y in 0 until height) {
+            for (x in 0 until width) {
+                val pixel = pixels[y * width + x]
+                val r = Color.red(pixel)
+                val g = Color.green(pixel)
+                val b = Color.blue(pixel)
+
+                // Stretch each channel
+                val newR = ((r - min) * 255 / (max - min)).coerceIn(0, 255)
+                val newG = ((g - min) * 255 / (max - min)).coerceIn(0, 255)
+                val newB = ((b - min) * 255 / (max - min)).coerceIn(0, 255)
+
+                output.setPixel(x, y, Color.rgb(newR, newG, newB))
+            }
+        }
+        return output
+    }
+
+    private fun scaleWithAspectRatio(bitmap: Bitmap, targetSize: Int): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+
+        val scale = targetSize.toFloat() / max(width, height)
+        val newWidth = (width * scale).toInt()
+        val newHeight = (height * scale).toInt()
+
+        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+    }
+
+    private fun reduceNoise(bitmap: Bitmap): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+        val output = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+
+        // Apply 3x3 median filter
+        for (y in 1 until height - 1) {
+            for (x in 1 until width - 1) {
+                val neighbors = mutableListOf<Int>()
+                for (dy in -1..1) {
+                    for (dx in -1..1) {
+                        neighbors.add(bitmap.getPixel(x + dx, y + dy))
+                    }
+                }
+                // Sort by luminance
+                neighbors.sortBy { Color.red(it) + Color.green(it) + Color.blue(it) }
+                // Use median value
+                output.setPixel(x, y, neighbors[4])
+            }
+        }
+        return output
     }
 }
